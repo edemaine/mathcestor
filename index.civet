@@ -36,19 +36,21 @@ function indent(s: string): string
   # put trailing newlines back
   .replace /$/, trailing
 
-# Fetcher based on https://github.com/davidalber/geneagrapher/blob/main/geneagrapher/grabber.py
-
 class Fetcher
   cache = new Map<ID, Person>() #Civet: remove ()
+  # Did we already fetch this id?
   has(id: ID): boolean
     @cache.has id
+  # Get cached person for this id, if already fetched
   #Civet: method
   #get(id: ID): Person | undefined
   #  @cache.get id
   get = (this: Fetcher, id: ID) -> @cache.get id
+
   urlFor(id: ID): string
     "https://www.mathgenealogy.org/id.php?id=#{id}"
 
+  # Recursively fetch specified id and all its recursive advisors [async]
   recurseAdvisors(id: ID)
     return @ if @has id
     person := await @fetch id
@@ -56,9 +58,12 @@ class Fetcher
       await @recurseAdvisors advisor
     @
 
+  # Fetch data for specified this id, cache and return it [async]
+  # (based on https://github.com/davidalber/geneagrapher/blob/main/geneagrapher/grabber.py)
   fetch(id: ID): Promise<Person>
     return @cache.get(id)! if @has id
     $ := await fromURL @urlFor id
+
     degree := $('div[style="line-height: 30px; text-align: center; margin-bottom: 1ex"] > span')
     .first()
 
@@ -80,7 +85,17 @@ class Fetcher
     @cache.set id, person
     person
 
+  # HTML rendering
+
+  # Keep track of which people have already been rendered,
+  # initialized by `html` method and used by other `html*` methods.
   rendered = new Set<ID>() #Civet: remove ()
+
+  # Call this to render HTML in one of two styles:
+  # * "person": just the person themselves
+  # * "advisors": all their recursive ancestors too
+  # You should have already called `fetch` or `recursiveAdvisors`
+  # on the same id, so that all data is already available in the cache.
   html(id: ID, content: "advisors" | "person"): string
     @rendered = new Set
     id
@@ -139,6 +154,7 @@ class Fetcher
       s += """  </div>\n"""
     s += """</div>\n"""
     s
+
   htmlStyle(html: string): string
     """
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
