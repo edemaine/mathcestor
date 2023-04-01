@@ -141,6 +141,7 @@ class Fetcher
     s
   htmlStyle(html: string): string
     """
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <style>
       :root {
         --border: 2px solid gray;
