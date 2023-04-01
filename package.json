@@ -4,18 +4,34 @@
   "description": "Ancestor tree from Mathematics Genealogy Project",
   "type": "module",
   "main": "index.js",
+  "bin": {
+    "mathcestor": "index.js"
+  },
   "scripts": {
+    "prepare": "civet --js -c index.civet -o .js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Erik Demaine",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edemaine/mathcestor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/edemaine/mathcestor/issues"
+  },
+  "homepage": "https://github.com/edemaine/mathcestor#readme",
+  "author": {
+    "name": "Erik Demaine",
+    "email": "edemaine@mit.edu",
+    "url": "https://erikdemaine.org/"
+  },
   "license": "MIT",
   "dependencies": {
-    "@cspotcode/source-map-support": "^0.8.1",
+    "@cspotcode/source-map-support": "0.8.1",
     "@danielx/civet": "0.5.92",
     "cheerio": "1.0.0-rc.12"
   },
   "devDependencies": {
     "@types/node": "18.15.11",
-    "undici": "^5.21.0"
+    "undici": "5.21.0"
   }
 }
