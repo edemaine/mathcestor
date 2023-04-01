@@ -136,8 +136,8 @@ class Fetcher
       for {degree, institution, year} of degrees
         data += '; ' if data
         data += degree if degree
-        data += ' ' if degree and institution
-        data += "at #{institution}" if institution
+        data += ', ' if degree and institution
+        data += institution if institution
         data += ', ' if data and year
         data += year if year
       data = " (#{data})" if data
