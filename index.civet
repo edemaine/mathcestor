@@ -23,6 +23,18 @@ interface Person
   advisors: ID[]
   descendants: ID[]
 
+function indent(s: string): string
+  trailing .= ''
+  s
+  # remove trailing newlines
+  .replace /\n*$/, (m) =>
+    trailing = m
+    ''
+  # indent remaining lines
+  .replace /^/gm, '    '
+  # put trailing newlines back
+  .replace /$/, trailing
+
 # Fetcher based on https://github.com/davidalber/geneagrapher/blob/main/geneagrapher/grabber.py
 
 class Fetcher
@@ -92,11 +104,17 @@ class Fetcher
     """
     {advisors} := @get(id)!
     if advisors.length
-      s += """  <div class="subtree">\n"""
-      for advisor of advisors
-        s += @htmlAdvisors advisor
-        .replace /^/gm, '    '
-        .replace /[ ]   $/, ''
+      #Civet: use the following instead
+      #[...middle, last] := advisors
+      middle := [...advisors]
+      [last] := middle.splice -1
+      if middle.length
+        s += """  <div class="middle">\n"""
+        for advisor of middle
+          s += indent @htmlAdvisors advisor
+        s += """  </div>\n"""
+      s += """  <div class="last">\n"""
+      s += indent @htmlAdvisors last
       s += """  </div>\n"""
     s += """</div>\n"""
     s
@@ -106,14 +124,18 @@ class Fetcher
       :root {
         --border: 2px solid black;
       }
-      .subtree { margin-left: 0.75em; border-left: var(--border); }
+      .middle, .last { margin-left: 1.3em; }
+      .middle { border-left: var(--border); }
       .line { display: flex; }
-      .subtree > .node > .line::before {
+      .line::before {
         border-bottom: var(--border);
-        width: 1em;
+        width: 0.75em;
         height: 0.6em;
         display: inline-block;
         content: "\\00a0";
+      }
+      .last > .node > .line::before {
+        border-left: var(--border);
       }
       .person { padding-left: 0.25em; }
     </style>
