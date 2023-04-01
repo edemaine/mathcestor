@@ -5,12 +5,14 @@
     "lib": ["es2021"],
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "target": "ES2020"
   },
   "ts-node": {
     "transpileOnly": true,
     "compilerOptions": {
-      "module": "ES2020"
     }
   }
 }
