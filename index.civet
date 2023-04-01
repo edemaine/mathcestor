@@ -14,14 +14,18 @@ async function fromURL(url: string)
 
 type ID = string
 
-interface Person
-  id: ID
-  name: string
+interface Degree
   degree: string
   institution: string
   thesis: string
   year: string
   advisors: ID[]
+
+interface Person
+  id: ID
+  name: string
+  degrees: Degree[]
+  advisors: ID[]  # union of all advisors in all degrees
   descendants: ID[]
 
 function indent(s: string): string
@@ -58,14 +62,12 @@ class Fetcher
       await @recurseAdvisors advisor
     @
 
-  # Fetch data for specified this id, cache and return it [async]
-  # (based on https://github.com/davidalber/geneagrapher/blob/main/geneagrapher/grabber.py)
+  # Fetch data for specified this id, cache and return it [async].
+  # Originally based on
+  # https://github.com/davidalber/geneagrapher/blob/main/geneagrapher/grabber.py
   fetch(id: ID): Promise<Person>
     return @cache.get(id)! if @has id
     $ := await fromURL @urlFor id
-
-    degree := $('div[style="line-height: 30px; text-align: center; margin-bottom: 1ex"] > span')
-    .first()
 
     function extractIds(part: Cheerio<Element>): ID[]
       for place of part
@@ -73,14 +75,26 @@ class Fetcher
         continue unless href?
         href.split("=").at(-1)!
 
+    # Degrees/theses/advisors are split into sibling groups by these headings
+    degreeHeading := 'div[style="line-height: 30px; text-align: center; margin-bottom: 1ex"]'
+    degrees :=
+      for element of $(degreeHeading)
+        degree := $(element)
+        section := degree.nextUntil degreeHeading
+        span := degree.children 'span'
+
+        degree: span.contents().first().text().trim() # leading text
+        institution: span.find('span').text().trim() # inner span
+        year: span.contents().last().text().trim() # trailing text
+        thesis: section.find('#thesisTitle').text().trim()
+                # following thesis title
+        advisors: extractIds section.find('p[style="text-align: center; line-height: 2.75ex"]:contains("Advisor") a')
+
     person: Person :=
       id: id
       name: $("h2").text().trim()
-      degree: degree.contents().first().text().trim()
-      institution: degree.find('span').text().trim()
-      thesis: $('#thesisTitle').text().trim()
-      year: degree.contents().last().text().trim()
-      advisors: extractIds $('p[style="text-align: center; line-height: 2.75ex"]:contains("Advisor") a')
+      degrees: degrees
+      advisors: Array.from new Set degrees.flatMap .advisors
       descendants: extractIds $('table a')
     @cache.set id, person
     person
@@ -112,18 +126,20 @@ class Fetcher
     person := @get id
     unless person?
       throw new Error "Couldn't find person with ID #{id}; did you call recurseAdvisors?"
-    {name, degree, institution, year} := person
+    {name, degrees} := person
     base := """<a href="#{@urlFor id}">#{name}</a>"""
     data .= ''
     if @rendered.has id
       "<em>#{base} (above)</em>"
     else
       @rendered.add id
-      data += degree if degree
-      data += ' ' if degree and institution
-      data += "at #{institution}" if institution
-      data += ', ' if data and year
-      data += year if year
+      for {degree, institution, year} of degrees
+        data += '; ' if data
+        data += degree if degree
+        data += ' ' if degree and institution
+        data += "at #{institution}" if institution
+        data += ', ' if data and year
+        data += year if year
       data = " (#{data})" if data
       base + data
 
