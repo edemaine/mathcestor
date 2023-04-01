@@ -1,4 +1,4 @@
-"civet coffeeComment coffeeEq"
+"civet coffeeComment coffeeEq coffeeInterpolation"
 
 declare global
   var fetch: typeof import('undici').fetch
@@ -27,15 +27,18 @@ interface Person
 
 class Fetcher
   cache = new Map<ID, Person>() #Civet: remove ()
-  has(id: ID)
+  has(id: ID): boolean
     @cache.has id
+  #Civet: method
+  #get(id: ID): Person | undefined
+  #  @cache.get id
+  get = (this: Fetcher, id: ID) -> @cache.get id
   urlFor(id: ID): string
-    `https://www.mathgenealogy.org/id.php?id=${id}`
+    "https://www.mathgenealogy.org/id.php?id=#{id}"
 
   recurseAdvisors(id: ID)
     return @ if @has id
     person := await @fetch id
-    console.log person
     for advisor of person.advisors
       await @recurseAdvisors advisor
     @
@@ -64,13 +67,71 @@ class Fetcher
     @cache.set id, person
     person
 
-function main()
+  htmlPerson(id: ID): string
+    person := @get id
+    unless person?
+      throw new Error "Couldn't find person with ID #{id}; did you call recurseAdvisors?"
+    {name, degree, institution, year} := person
+    data .= ''
+    data += degree if degree
+    data += ' ' if degree and institution
+    data += "at #{institution}" if institution
+    data += ', ' if data and year
+    data += year if year
+    data = " (#{data})" if data
+    """<a href="#{@urlFor id}">#{name}</a>#{data}"""
+  htmlAdvisors(id: ID): string
+    s .= """
+      <div class="node">
+        <div class="line">
+          <div class="person">
+            #{@htmlPerson id}
+          </div>
+        </div>
+
+    """
+    {advisors} := @get(id)!
+    if advisors.length
+      s += """  <div class="subtree">\n"""
+      for advisor of advisors
+        s += @htmlAdvisors advisor
+        .replace /^/gm, '    '
+        .replace /[ ]   $/, ''
+      s += """  </div>\n"""
+    s += """</div>\n"""
+    s
+  htmlStyle(html: string): string
+    """
+    <style>
+      :root {
+        --border: 2px solid black;
+      }
+      .subtree { margin-left: 0.75em; border-left: var(--border); }
+      .line { display: flex; }
+      .subtree > .node > .line::before {
+        border-bottom: var(--border);
+        width: 1em;
+        height: 0.6em;
+        display: inline-block;
+        content: "\\00a0";
+      }
+      .person { padding-left: 0.25em; }
+    </style>
+    #{html}
+    """
+
+#Civet: remove async
+async function main()
   root := process.argv[2]
   unless root
     console.log "Specify a root ID"
     process.exit 1
-  new Fetcher()
-  .recurseAdvisors root
+  fetcher := new Fetcher()
+  fetcher.recurseAdvisors root
+  |> await
+  |> .htmlAdvisors root
+  |> fetcher.htmlStyle
+  |> console.log
 
 * as url from 'node:url'
 main() if import.meta.url.startsWith('file:') and
