@@ -1,4 +1,4 @@
-# mathcestor: Render an HTML ancestor tree from [Mathematics Genealogy Project](https://www.mathgenealogy.org/)
+# mathcestor: Ancestor tree from [Mathematics Genealogy Project](https://www.mathgenealogy.org/), rendered to HTML
 
 Given the ID of a mathematician from the
 [Mathematics Genealogy Project](https://www.mathgenealogy.org/),
