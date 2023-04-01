@@ -27,7 +27,7 @@
   "license": "MIT",
   "dependencies": {
     "@cspotcode/source-map-support": "0.8.1",
-    "@danielx/civet": "0.5.92",
+    "@danielx/civet": "0.5.93",
     "cheerio": "1.0.0-rc.12"
   },
   "devDependencies": {
