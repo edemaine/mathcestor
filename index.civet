@@ -1,0 +1,46 @@
+"civet coffeeComment coffeeForLoops"
+
+import * as cheerio from 'cheerio'
+console.log cheerio
+
+type ID = string
+
+interface Person
+  id: ID
+  name: string
+  institution: string
+  year: string
+  advisors: ID[]
+  descendants: ID[]
+
+# Based on https://github.com/davidalber/geneagrapher/blob/main/geneagrapher/grabber.py
+class Fetcher
+  urlFor(id: ID): string
+    `https://www.mathgenealogy.org/id.php?id=${id}`
+  recurse(id: ID)
+    x
+  fetch(id: ID)
+    $ := await cheerio.fromURL @urlFor id
+    degree := $('div[style="line-height: 30px; text-align: center; margin-bottom: 1ex"] > span')
+    .first()
+
+    id: id
+    name: $("h2").text().trim()
+    degree: degree.contents().first().text().trim()
+    institution: degree.find('span').text().trim()
+    year: degree.contents().last().text().trim()
+    advisors: extractIds $(':contains("Advisor")').next()
+    descendants: extractIds
+
+    function extractIds($: cheerio.Cheerio): string
+      let place: cheerio.Cheerio
+      for place from tag
+        place.attr("href").split("=")[-1]
+
+function main()
+  root := process.argv[2]
+  unless root
+    console.log "Specify a root ID"
+    process.exit 1
+  new Fetcher
+  .recurse root
