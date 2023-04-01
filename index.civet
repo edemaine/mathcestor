@@ -1,7 +1,13 @@
 "civet coffeeComment coffeeForLoops"
 
-import * as cheerio from 'cheerio'
-console.log cheerio
+declare global
+  var fetch: typeof import('undici').fetch
+
+{load as loadCheerio, Cheerio} from 'cheerio'
+function fromUrl(url: string)
+  response := fetch url |> await
+  unless response.ok
+    throw new Error "Failed to fetch #{url}"
 
 type ID = string
 
