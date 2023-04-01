@@ -1,4 +1,4 @@
-"civet coffeeComment coffeeEq coffeeInterpolation"
+"civet coffeeComment coffeeEq coffeeInterpolation coffeeNot"
 
 declare global
   var fetch: typeof import('undici').fetch
@@ -79,20 +79,34 @@ class Fetcher
     @cache.set id, person
     person
 
+  rendered = new Set<ID>() #Civet: remove ()
+  html(id: ID, content: "advisors" | "person"): string
+    @rendered = new Set
+    id
+    #Civet: omit surrounding parens in next line
+    |> ((@ as any)["html#{content[0].toUpperCase()}#{content[1..]}"] as (id: ID) => string)
+    |> @htmlStyle
+
   htmlPerson(id: ID): string
     person := @get id
     unless person?
       throw new Error "Couldn't find person with ID #{id}; did you call recurseAdvisors?"
     {name, degree, institution, year} := person
     data .= ''
-    data += degree if degree
-    data += ' ' if degree and institution
-    data += "at #{institution}" if institution
-    data += ', ' if data and year
-    data += year if year
-    data = " (#{data})" if data
+    if @rendered.has id
+      data = ' <em>(above)</em>'
+    else
+      @rendered.add id
+      data += degree if degree
+      data += ' ' if degree and institution
+      data += "at #{institution}" if institution
+      data += ', ' if data and year
+      data += year if year
+      data = " (#{data})" if data
     """<a href="#{@urlFor id}">#{name}</a>#{data}"""
+
   htmlAdvisors(id: ID): string
+    rendered := @rendered.has id
     s .= """
       <div class="node">
         <div class="line">
@@ -103,7 +117,7 @@ class Fetcher
 
     """
     {advisors} := @get(id)!
-    if advisors.length
+    if advisors.length and not rendered
       #Civet: use the following instead
       #[...middle, last] := advisors
       middle := [...advisors]
@@ -151,8 +165,7 @@ async function main()
   fetcher := new Fetcher()
   fetcher.recurseAdvisors root
   |> await
-  |> .htmlAdvisors root
-  |> fetcher.htmlStyle
+  |> .html root, 'advisors'
   |> console.log
 
 * as url from 'node:url'
