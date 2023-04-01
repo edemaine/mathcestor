@@ -142,7 +142,7 @@ class Fetcher
     """
     <style>
       :root {
-        --border: 2px solid black;
+        --border: 2px solid gray;
       }
       .middle, .last { margin-left: 1.3em; }
       .middle { border-left: var(--border); }
