@@ -162,12 +162,12 @@ class Fetcher
       :root {
         --border: 2px solid gray;
       }
-      .middle, .last { margin-left: 1.3em; }
+      .middle, .last { margin-left: 1em; }
       .middle { border-left: var(--border); }
       .line { display: flex; }
       .line::before {
         border-bottom: var(--border);
-        width: 0.75em;
+        width: 0.5em;
         height: 0.6em;
         display: inline-block;
         content: "\\00a0";
