@@ -1,6 +1,6 @@
 {
   "name": "mathcestor",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Ancestor tree from Mathematics Genealogy Project, rendered to HTML",
   "type": "module",
   "main": "index.js",
