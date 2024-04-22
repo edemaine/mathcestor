@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-"civet coffeeComment coffeeEq coffeeInterpolation coffeeNot"
+"civet coffeeComment coffeeEq coffeeInterpolation"
 
 declare global
   var fetch: typeof import('undici').fetch
